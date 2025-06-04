@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: chatapp-backend
+    env: python
+    plan: free
+    buildCommand: ""
+    startCommand: python main.py
+    envVars:
+      - key: AZURE_CONNECTION_STRING
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_SERVER
+        sync: false
+      - key: USERS_CONTAINER
+        sync: false
+      - key: MESSAGES_CONTAINER
+        sync: false
