@@ -907,6 +907,7 @@ def handle_group_message(data):
 def join_group(data):
     group_id = data["group_id"]
     join_room(group_id)
+    emit("joined_group", {"group_id": group_id}, room=request.sid)
     # Cargar historial
     chat_blob_name = f"chat_{group_id}.json"
     try:
