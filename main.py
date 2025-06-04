@@ -893,6 +893,7 @@ def handle_group_message(data):
             "from": sender,
             "message": content,
             "timestamp": datetime.datetime.utcnow().isoformat(),
+            "group_id": group_id
         }
         all_messages.append(msg_to_store)
         blob_client.upload_blob(json.dumps(all_messages), overwrite=True)
