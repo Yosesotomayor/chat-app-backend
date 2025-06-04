@@ -49,7 +49,7 @@
             public_key: publicKeyPEM,
           };
 
-          const response = await fetch("/signup", {
+          const response = await fetch("/api/signup", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data),
@@ -65,7 +65,7 @@
               .getElementById("customAlert")
               .querySelector("button").onclick = function () {
                 closeAlert();
-                window.location.href = "../index/index.html";
+                window.location.href = "/index/index.html";
               };
           } else {
             // Si falla, elimina cualquier clave generada de este intento

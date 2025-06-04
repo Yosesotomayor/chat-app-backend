@@ -7,7 +7,7 @@
   </head>
   <body class="signup">
     <div class="signupContainer">
-      <a href="../index/index.html" class="back-button">← Back to Home</a>
+      <a href="/index/index.html" class="back-button">← Back to Home</a>
 
       <h2>Login</h2>
       <form id="loginForm">
@@ -42,7 +42,7 @@
           password: document.getElementById("password").value,
         };
 
-        const response = await fetch("/login", {
+        const response = await fetch("/api/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
@@ -52,7 +52,7 @@
         if (response.ok) {
           localStorage.setItem("user_name", result.name);
           localStorage.setItem("user_email", result.email);
-          window.location.href = "/dashboard.html";
+          window.location.href = "/source/dashboard.html";
         } else {
           errorMsg.textContent = result.error || "Error desconocido";
           errorMsg.style.display = "block";
