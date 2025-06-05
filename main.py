@@ -976,7 +976,7 @@ def add_group_members():
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+    
 @socketio.on("send_group_message")
 def handle_group_message(data):
     group_id = data["group_id"]
@@ -985,40 +985,43 @@ def handle_group_message(data):
     chat_blob_name = f"chat_{group_id}.json"
 
     try:
-        # Intentar obtener el nombre del remitente desde el contenedor de usuarios
-        sender_name = sender  # Valor por defecto
-        try:
-            sender_blob = usuarios_container.get_blob_client(get_blob_name(sender))
-            if sender_blob.exists():
+        # Obtener nombre de remitente desde blob de usuario
+        sender_blob = usuarios_container.get_blob_client(get_blob_name(sender))
+        sender_name = sender
+        if sender_blob.exists():
+            try:
                 sender_data = json.loads(sender_blob.download_blob().readall())
                 sender_name = sender_data.get("name", sender)
-        except Exception as e:
-            print(f"[WARN] No se pudo obtener nombre de {sender}: {e}")
+            except Exception as e:
+                print(f"[WARN] No se pudo obtener nombre de {sender}: {e}")
 
-        # Construir el mensaje con nombre visible
+        # Construcción explícita del mensaje
         msg_to_store = {
             "from": sender,
-            "from_name": sender_name,  # ✅ Nombre visible
+            "from_name": sender_name,  # 👈 Este campo debe ir sí o sí
             "message": content,
             "timestamp": datetime.datetime.utcnow().isoformat(),
             "group_id": group_id,
         }
 
-        # Guardar en el historial del grupo
+        # Guardar en Azure
         blob_client = mensajes_container.get_blob_client(chat_blob_name)
         all_messages = []
         if blob_client.exists():
             all_messages = json.loads(blob_client.download_blob().readall())
+
         all_messages.append(msg_to_store)
         blob_client.upload_blob(json.dumps(all_messages), overwrite=True)
 
-        # Emitir a todos los del grupo
+        # 🔊 Emitir al grupo
         socketio.emit("receive_group_message", msg_to_store, room=group_id)
-        print(f"[SOCKET.IO] Grupo {group_id}: mensaje enviado: {msg_to_store}")
+
+        # 🔍 Verificación de lo que se está emitiendo
+        print(f"[DEBUG] Emisión a grupo {group_id}:\n{json.dumps(msg_to_store, indent=2)}")
 
     except Exception as e:
         print(f"[ERROR grupo] {e}")
-
+        
 @app.route("/<path:filename>")
 def dynamic_static(filename):
     if filename.startswith("logsign/"):
