@@ -979,6 +979,7 @@ def add_group_members():
     
 @socketio.on("send_group_message")
 def handle_group_message(data):
+    print(data)
     group_id = data["group_id"]
     sender = data["from"]
     content = data["message"]
