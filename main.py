@@ -19,7 +19,7 @@ import uuid
 # Clave AES global para cifrado de mensajes (ejemplo de 32 bytes para AES-256)
 # NOTA: En producción, esta clave debe mantenerse secreta y nunca exponerse.
 GLOBAL_AES_KEY = b"0123456789abcdef0123456789abcdef"
-
+print("⚡️ Server running from main.py version 2025-06-04")
 # =========================
 # Variables globales para recuperación de contraseña
 password_reset_codes = {}
