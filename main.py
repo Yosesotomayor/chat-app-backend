@@ -882,13 +882,11 @@ def handle_group_message(data):
     sender = data["from"]
     content = data["message"]
     chat_blob_name = f"chat_{group_id}.json"
-
     try:
         blob_client = mensajes_container.get_blob_client(chat_blob_name)
         all_messages = []
         if blob_client.exists():
             all_messages = json.loads(blob_client.download_blob().readall())
-
         msg_to_store = {
             "from": sender,
             "message": content,
@@ -897,6 +895,7 @@ def handle_group_message(data):
         }
         all_messages.append(msg_to_store)
         blob_client.upload_blob(json.dumps(all_messages), overwrite=True)
+        # Emitir SIEMPRE el mensaje al room de grupo en tiempo real tras guardar
         socketio.emit("receive_group_message", msg_to_store, room=group_id)
         print(f"[SOCKET.IO] Mensaje de grupo propagado en room {group_id}: {msg_to_store}")
     except Exception as e:
