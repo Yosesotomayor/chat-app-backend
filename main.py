@@ -847,7 +847,10 @@ def create_group():
     group_name = data.get("name")
     members = data.get("members", [])
     # Usa un campo explícito 'admin' si viene en el request, si no, usa el primer miembro
-    admin = data.get("admin") or (members[0] if members else None)
+    admin = data.get("admin")
+    if not admin and members:
+        admin = members[0]
+    print(f"[DEBUG] Creando grupo: admin={admin}, members={members}")
     group_id = f"group_{uuid.uuid4().hex[:8]}"
     group_blob_name = f"{group_id}.json"
 
