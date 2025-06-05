@@ -888,6 +888,25 @@ def get_groups():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# Endpoint para obtener un grupo por su ID
+@app.route("/get-group", methods=["POST"])
+def get_group():
+    data = request.json
+    group_id = data.get("group_id")
+    if not group_id:
+        return jsonify({"error": "Falta el id de grupo"}), 400
+
+    group_blob_name = f"{group_id}.json"
+    try:
+        group_blob = mensajes_container.get_blob_client(group_blob_name)
+        if not group_blob.exists():
+            return jsonify({"error": "Grupo no encontrado"}), 404
+
+        group_data = json.loads(group_blob.download_blob().readall())
+        return jsonify({"group": group_data}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 @socketio.on("send_group_message")
 def handle_group_message(data):
