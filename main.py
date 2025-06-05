@@ -857,7 +857,7 @@ def create_group():
         "id": group_id,
         "name": group_name,
         "members": members,
-        "admin": admin,
+        "creator": admin,
         "created_at": datetime.datetime.utcnow().isoformat(),
     }
     try:
@@ -889,7 +889,8 @@ def get_groups():
         return jsonify({"groups": groups}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+
 @app.route("/get-group", methods=["POST"])
 def get_group():
     data = request.json
@@ -907,6 +908,7 @@ def get_group():
         return jsonify({"group": group_data}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @socketio.on("send_group_message")
 def handle_group_message(data):
