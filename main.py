@@ -857,7 +857,7 @@ def create_group():
         "id": group_id,
         "name": group_name,
         "members": members,
-        "creator": admin,
+        "admin": admin,
         "created_at": datetime.datetime.utcnow().isoformat(),
     }
     try:
