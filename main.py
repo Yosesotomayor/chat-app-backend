@@ -981,11 +981,16 @@ def add_group_members():
 
         group_data = json.loads(group_blob.download_blob().readall())
         original_members = set(group_data.get("members", []))
+        original_admin = group_data.get("admin")
         added = []
         for member in new_members:
             if member not in original_members:
                 group_data["members"].append(member)
                 added.append(member)
+        # Protección: No cambiar el admin, aunque algún nuevo miembro lo proponga o lo modifique accidentalmente.
+        # Si por error el admin fue cambiado, restauramos el original.
+        # Solo se asegura que el campo "admin" no cambie aquí:
+        group_data["admin"] = original_admin
         group_blob.upload_blob(json.dumps(group_data), overwrite=True)
         return (
             jsonify(
