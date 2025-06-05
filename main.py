@@ -977,7 +977,6 @@ def add_group_members():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @socketio.on("send_group_message")
 def handle_group_message(data):
     group_id = data["group_id"]
@@ -986,14 +985,26 @@ def handle_group_message(data):
     chat_blob_name = f"chat_{group_id}.json"
 
     try:
-        # ⛔️ No estás usando un contenedor de usuarios, así que usa el correo como nombre visible
+        # Intentar obtener el nombre del remitente desde el contenedor de usuarios
+        sender_name = sender  # Valor por defecto
+        try:
+            sender_blob = usuarios_container.get_blob_client(get_blob_name(sender))
+            if sender_blob.exists():
+                sender_data = json.loads(sender_blob.download_blob().readall())
+                sender_name = sender_data.get("name", sender)
+        except Exception as e:
+            print(f"[WARN] No se pudo obtener nombre de {sender}: {e}")
+
+        # Construir el mensaje con nombre visible
         msg_to_store = {
             "from": sender,
+            "from_name": sender_name,  # ✅ Nombre visible
             "message": content,
             "timestamp": datetime.datetime.utcnow().isoformat(),
             "group_id": group_id,
         }
 
+        # Guardar en el historial del grupo
         blob_client = mensajes_container.get_blob_client(chat_blob_name)
         all_messages = []
         if blob_client.exists():
@@ -1001,12 +1012,12 @@ def handle_group_message(data):
         all_messages.append(msg_to_store)
         blob_client.upload_blob(json.dumps(all_messages), overwrite=True)
 
+        # Emitir a todos los del grupo
         socketio.emit("receive_group_message", msg_to_store, room=group_id)
         print(f"[SOCKET.IO] Grupo {group_id}: mensaje enviado: {msg_to_store}")
 
     except Exception as e:
         print(f"[ERROR grupo] {e}")
-
 
 @app.route("/<path:filename>")
 def dynamic_static(filename):
