@@ -846,6 +846,8 @@ def create_group():
     data = request.json
     group_name = data.get("name")
     members = data.get("members", [])
+    # Usa un campo explícito 'admin' si viene en el request, si no, usa el primer miembro
+    admin = data.get("admin") or (members[0] if members else None)
     group_id = f"group_{uuid.uuid4().hex[:8]}"
     group_blob_name = f"{group_id}.json"
 
@@ -853,6 +855,7 @@ def create_group():
         "id": group_id,
         "name": group_name,
         "members": members,
+        "admin": admin,
         "created_at": datetime.datetime.utcnow().isoformat(),
     }
     try:
