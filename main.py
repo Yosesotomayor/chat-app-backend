@@ -887,6 +887,7 @@ def get_groups():
         return jsonify({"groups": groups}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
 @app.route("/get-group", methods=["POST"])
 def get_group():
     data = request.json
