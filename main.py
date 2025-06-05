@@ -898,6 +898,7 @@ def handle_group_message(data):
         all_messages.append(msg_to_store)
         blob_client.upload_blob(json.dumps(all_messages), overwrite=True)
         socketio.emit("receive_group_message", msg_to_store, room=group_id)
+        print(f"[SOCKET.IO] Mensaje de grupo propagado en room {group_id}: {msg_to_store}")
     except Exception as e:
         print(f"[ERROR grupo] {e}")
 
@@ -907,6 +908,7 @@ def handle_group_message(data):
 def join_group(data):
     group_id = data["group_id"]
     join_room(group_id)
+    print(f"[SOCKET.IO] {request.sid} se unió al grupo {group_id}")
     emit("joined_group", {"group_id": group_id}, room=request.sid)
     # Cargar historial
     chat_blob_name = f"chat_{group_id}.json"
@@ -916,8 +918,10 @@ def join_group(data):
         if blob_client.exists():
             messages = json.loads(blob_client.download_blob().readall())
         emit("group_chat_history", messages, room=request.sid)
+        print(f"[SOCKET.IO] Historial enviado a {request.sid} para grupo {group_id}: {len(messages)} mensajes")
     except Exception as e:
         emit("group_chat_history", [], room=request.sid)
+        print(f"[SOCKET.IO ERROR] al enviar historial de grupo {group_id}: {e}")
 
 
 # Endpoint para añadir miembros a un grupo existente
