@@ -887,8 +887,6 @@ def get_groups():
         return jsonify({"groups": groups}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-# Endpoint para obtener un grupo por su ID
 @app.route("/get-group", methods=["POST"])
 def get_group():
     data = request.json
@@ -906,7 +904,6 @@ def get_group():
         return jsonify({"group": group_data}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @socketio.on("send_group_message")
 def handle_group_message(data):
