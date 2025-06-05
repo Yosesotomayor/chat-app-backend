@@ -979,7 +979,6 @@ def add_group_members():
     
 @socketio.on("send_group_message")
 def handle_group_message(data):
-    print(data, flush=True)
     group_id = data["group_id"]
     sender = data["from"]
     content = data["message"]
@@ -999,7 +998,7 @@ def handle_group_message(data):
         # Construcción explícita del mensaje
         msg_to_store = {
             "from": sender,
-            "from_name": sender_name,  # 👈 Este campo debe ir sí o sí
+            "from_name": 'TEST!!!!!!!!!',  # 👈 Este campo debe ir sí o sí
             "message": content,
             "timestamp": datetime.datetime.utcnow().isoformat(),
             "group_id": group_id,
@@ -1016,9 +1015,6 @@ def handle_group_message(data):
 
         # 🔊 Emitir al grupo
         socketio.emit("receive_group_message", msg_to_store, room=group_id)
-
-        # 🔍 Verificación de lo que se está emitiendo
-        print(f"[DEBUG] Emisión a grupo {group_id}:\n{json.dumps(msg_to_store, indent=2)}")
 
     except Exception as e:
         print(f"[ERROR grupo] {e}")
