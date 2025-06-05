@@ -24,6 +24,7 @@ GLOBAL_AES_KEY = b"0123456789abcdef0123456789abcdef"
 # Variables globales para recuperación de contraseña
 password_reset_codes = {}
 
+
 # =========================
 # Utilidad para enviar correo de recuperación
 def send_recovery_email(to_email, code):
@@ -32,9 +33,9 @@ def send_recovery_email(to_email, code):
     email_user = os.getenv("EMAIL_USER")
     email_pass = os.getenv("EMAIL_PASS")
     msg = MIMEText(f"Tu código de recuperación es: {code}")
-    msg['Subject'] = "Código de recuperación - ChatApp"
-    msg['From'] = email_user
-    msg['To'] = to_email
+    msg["Subject"] = "Código de recuperación - ChatApp"
+    msg["From"] = email_user
+    msg["To"] = to_email
     with smtplib.SMTP(smtp_server, smtp_port) as server:
         server.starttls()
         server.login(email_user, email_pass)
@@ -106,6 +107,7 @@ def get_public_key():
 def serve_style():
     return send_from_directory("index", "style.css")
 
+
 @app.route("/source/dashboard.html")
 def dashboard():
     user_email = request.cookies.get("user_email")
@@ -122,7 +124,7 @@ def styles():
 @app.route("/get-group-messages", methods=["POST"])
 def get_group_messages():
     data = request.json
-    print("DEBUG get-group-messages data:", data) 
+    print("DEBUG get-group-messages data:", data)
     group_id = data.get("group_id")
     if not group_id:
         return jsonify({"error": "Falta el id de grupo"}), 400
@@ -597,14 +599,17 @@ def login():
                         400,
                     )
             from flask import make_response
-            resp = make_response(jsonify(
-                {
-                    "message": "Login exitoso",
-                    "name": user_data.get("name"),
-                    "email": user_data.get("email"),
-                }
-            ))
-            resp.set_cookie('user_email', user_data.get("email"))
+
+            resp = make_response(
+                jsonify(
+                    {
+                        "message": "Login exitoso",
+                        "name": user_data.get("name"),
+                        "email": user_data.get("email"),
+                    }
+                )
+            )
+            resp.set_cookie("user_email", user_data.get("email"))
             return resp
         else:
             return jsonify({"error": "Contraseña incorrecta"}), 401
@@ -779,7 +784,6 @@ def mark_messages_as_read():
         return jsonify({"error": str(e)}), 500
 
 
-
 # Endpoint para solicitar el envío del código de recuperación
 @app.route("/request-reset-code", methods=["POST"])
 def request_reset_code():
@@ -793,15 +797,19 @@ def request_reset_code():
     code = str(random.randint(100000, 999999))
     password_reset_codes[email] = {
         "code": code,
-        "expires": datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+        "expires": datetime.datetime.utcnow() + datetime.timedelta(minutes=10),
     }
     try:
         send_recovery_email(email, code)
-        return jsonify({"message": "Se ha enviado un código de recuperación a tu correo"}), 200
+        return (
+            jsonify({"message": "Se ha enviado un código de recuperación a tu correo"}),
+            200,
+        )
     except Exception as e:
         print("[ERROR al enviar correo]", e)
         # Devuelve el mensaje real de error para depuración (solo durante desarrollo).
         return jsonify({"error": f"No se pudo enviar el correo: {str(e)}"}), 500
+
 
 # Endpoint para verificar el código y cambiar la contraseña
 @app.route("/verify-reset-code", methods=["POST"])
@@ -830,6 +838,7 @@ def verify_reset_code():
 
     del password_reset_codes[email]
     return jsonify({"message": "Contraseña cambiada correctamente"}), 200
+
 
 # ==== GRUPOS ====
 @app.route("/create-group", methods=["POST"])
@@ -892,24 +901,25 @@ def handle_group_message(data):
             "from": sender,
             "message": content,
             "timestamp": datetime.datetime.utcnow().isoformat(),
-            "group_id": group_id
+            "group_id": group_id,
         }
         all_messages.append(msg_to_store)
         blob_client.upload_blob(json.dumps(all_messages), overwrite=True)
         # Emitir SIEMPRE el mensaje al room de grupo en tiempo real tras guardar
         socketio.emit("receive_group_message", msg_to_store, room=group_id)
-        print(f"[SOCKET.IO] Mensaje de grupo propagado en room {group_id}: {msg_to_store}")
+        print(
+            f"[SOCKET.IO] Mensaje de grupo propagado en room {group_id}: {msg_to_store}"
+        )
     except Exception as e:
         print(f"[ERROR grupo] {e}")
 
 
-
 @socketio.on("join_group")
 def join_group(data):
-    group_id = data.get("group_id")
+    group_id = data.get("group_id") or data.get("groupId")
     if not group_id:
-        print("[ERROR] join_group: group_id faltante")
-        emit("join_group_error", {"message": "Falta group_id"}, room=request.sid)
+        print("[ERROR] join_group: group_id no proporcionado.")
+        emit("group_error", {"error": "Falta group_id"}, room=request.sid)
         return
     join_room(group_id)
     print(f"[SOCKET.IO] {request.sid} se unió al grupo {group_id}")
@@ -922,7 +932,9 @@ def join_group(data):
         if blob_client.exists():
             messages = json.loads(blob_client.download_blob().readall())
         emit("group_chat_history", messages, room=request.sid)
-        print(f"[SOCKET.IO] Historial enviado a {request.sid} para grupo {group_id}: {len(messages)} mensajes")
+        print(
+            f"[SOCKET.IO] Historial enviado a {request.sid} para grupo {group_id}: {len(messages)} mensajes"
+        )
     except Exception as e:
         emit("group_chat_history", [], room=request.sid)
         print(f"[SOCKET.IO ERROR] al enviar historial de grupo {group_id}: {e}")
@@ -952,16 +964,25 @@ def add_group_members():
                 group_data["members"].append(member)
                 added.append(member)
         group_blob.upload_blob(json.dumps(group_data), overwrite=True)
-        return jsonify({"message": f"Se añadieron {len(added)} miembro(s) al grupo.", "added": added}), 200
+        return (
+            jsonify(
+                {
+                    "message": f"Se añadieron {len(added)} miembro(s) al grupo.",
+                    "added": added,
+                }
+            ),
+            200,
+        )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @app.route("/<path:filename>")
 def dynamic_static(filename):
     if filename.startswith("logsign/"):
-        return send_from_directory("source/logsign", filename[len("logsign/"):])
+        return send_from_directory("source/logsign", filename[len("logsign/") :])
     elif filename.startswith("index/"):
-        return send_from_directory("source/index", filename[len("index/"):])
+        return send_from_directory("source/index", filename[len("index/") :])
     else:
         return send_from_directory("source", filename)
 
@@ -969,4 +990,3 @@ def dynamic_static(filename):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     socketio.run(app, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
-
