@@ -906,7 +906,11 @@ def handle_group_message(data):
 
 @socketio.on("join_group")
 def join_group(data):
-    group_id = data["group_id"]
+    group_id = data.get("group_id")
+    if not group_id:
+        print("[ERROR] join_group: group_id faltante")
+        emit("join_group_error", {"message": "Falta group_id"}, room=request.sid)
+        return
     join_room(group_id)
     print(f"[SOCKET.IO] {request.sid} se unió al grupo {group_id}")
     emit("joined_group", {"group_id": group_id}, room=request.sid)
