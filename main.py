@@ -122,6 +122,7 @@ def styles():
 @app.route("/get-group-messages", methods=["POST"])
 def get_group_messages():
     data = request.json
+    print("DEBUG get-group-messages data:", data) 
     group_id = data.get("group_id")
     if not group_id:
         return jsonify({"error": "Falta el id de grupo"}), 400
