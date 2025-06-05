@@ -987,11 +987,8 @@ def handle_group_message(data):
 
     try:
         # ⛔️ No estás usando un contenedor de usuarios, así que usa el correo como nombre visible
-        sender_name = sender  # Por ahora, el nombre será el mismo correo
-
         msg_to_store = {
             "from": sender,
-            "from_name": sender_name,  # 👈 Este campo es clave para el frontend
             "message": content,
             "timestamp": datetime.datetime.utcnow().isoformat(),
             "group_id": group_id,
