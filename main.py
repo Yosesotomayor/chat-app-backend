@@ -910,50 +910,6 @@ def get_group():
         return jsonify({"error": str(e)}), 500
 
 
-@socketio.on("send_group_message")
-def handle_group_message(data):
-    group_id = data["group_id"]
-    sender = data["from"]
-    content = data["message"]
-    chat_blob_name = f"chat_{group_id}.json"
-
-    try:
-        # Obtener el nombre del remitente
-        sender_blob = usuarios_container.get_blob_client(get_blob_name(sender))
-        sender_name = sender
-        if sender_blob.exists():
-            try:
-                sender_data = json.loads(sender_blob.download_blob().readall())
-                sender_name = sender_data.get("name", sender)
-            except Exception as e:
-                print(f"[WARN] No se pudo obtener nombre de {sender}: {e}")
-
-        # Construir el mensaje con nombre visible
-        msg_to_store = {
-            "from": sender,
-            "from_name": sender_name,  # 🔔 aquí añadimos el nombre
-            "message": content,
-            "timestamp": datetime.datetime.utcnow().isoformat(),
-            "group_id": group_id,
-        }
-
-        # Guardar historial
-        blob_client = mensajes_container.get_blob_client(chat_blob_name)
-        all_messages = []
-        if blob_client.exists():
-            all_messages = json.loads(blob_client.download_blob().readall())
-        all_messages.append(msg_to_store)
-        blob_client.upload_blob(json.dumps(all_messages), overwrite=True)
-
-        # Emitir a todos los miembros del grupo
-        socketio.emit("receive_group_message", msg_to_store, room=group_id)
-        print(
-            f"[SOCKET.IO] Mensaje de grupo propagado en room {group_id}: {msg_to_store}"
-        )
-
-    except Exception as e:
-        print(f"[ERROR grupo] {e}")
-
 
 @socketio.on("join_group")
 def join_group(data):
@@ -1021,6 +977,51 @@ def add_group_members():
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+    
+@socketio.on("send_group_message")
+def handle_group_message(data):
+    group_id = data["group_id"]
+    sender = data["from"]
+    content = data["message"]
+    chat_blob_name = f"chat_{group_id}.json"
+
+    try:
+        # Obtener el nombre del remitente
+        sender_blob = usuarios_container.get_blob_client(get_blob_name(sender))
+        sender_name = sender
+        if sender_blob.exists():
+            try:
+                sender_data = json.loads(sender_blob.download_blob().readall())
+                sender_name = sender_data.get("name", sender)
+            except Exception as e:
+                print(f"[WARN] No se pudo obtener nombre de {sender}: {e}")
+
+        # Construir el mensaje con nombre visible
+        msg_to_store = {
+            "from": sender,
+            "from_name": sender_name,  # 🔔 aquí añadimos el nombre
+            "message": content,
+            "timestamp": datetime.datetime.utcnow().isoformat(),
+            "group_id": group_id,
+        }
+
+        # Guardar historial
+        blob_client = mensajes_container.get_blob_client(chat_blob_name)
+        all_messages = []
+        if blob_client.exists():
+            all_messages = json.loads(blob_client.download_blob().readall())
+        all_messages.append(msg_to_store)
+        blob_client.upload_blob(json.dumps(all_messages), overwrite=True)
+
+        # Emitir a todos los miembros del grupo
+        socketio.emit("receive_group_message", msg_to_store, room=group_id)
+        print(
+            f"[SOCKET.IO] Mensaje de grupo propagado en room {group_id}: {msg_to_store}"
+        )
+
+    except Exception as e:
+        print(f"[ERROR grupo] {e}")
 
 
 @app.route("/<path:filename>")
